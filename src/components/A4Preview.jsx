@@ -1,70 +1,124 @@
 import { forwardRef } from 'react';
-import { A4_HEIGHT_PX, A4_WIDTH_PX, getGridConfig, getGridRows } from '../utils';
+import { A4_HEIGHT_PX, A4_WIDTH_PX } from '../utils';
+
+function FieldBox({ label, value, className = '' }) {
+  return (
+    <div
+      className={`rounded-[6px] border border-[#d6d6d6] bg-white px-3 py-2 ${className}`}
+    >
+      <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+        {label}
+      </div>
+      <div className="mt-1.5 min-h-[22px] break-words text-[15px] font-medium leading-5 text-black">
+        {value || '\u00A0'}
+      </div>
+    </div>
+  );
+}
 
 function EmptyState() {
   return (
-    <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-line bg-slate-50">
-      <div className="max-w-sm text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
-          Live Preview
+    <div className="flex h-full items-center justify-center rounded-[8px] border border-dashed border-[#d6d6d6] bg-white px-8">
+      <div className="max-w-md text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+          Evidence Images
         </p>
-        <p className="mt-3 text-base text-steel">
-          Upload product images to generate the A4 sheet layout. Title and remarks will
-          appear here exactly as exported.
+        <p className="mt-2 text-sm leading-6 text-slate-700">
+          Upload up to 4 document photos. The preview, PDF, and printed page will match
+          this layout exactly.
         </p>
       </div>
     </div>
   );
 }
 
-const A4Preview = forwardRef(function A4Preview({ title, remarks, images }, ref) {
-  const gridCols = getGridConfig(images.length);
-  const gridRows = getGridRows(images.length);
-  const hasImages = images.length > 0;
+function ImageLayout({ images }) {
+  if (images.length === 1) {
+    return (
+      <div className="grid h-full grid-cols-1">
+        <ImageCard image={images[0]} />
+      </div>
+    );
+  }
+
+  if (images.length === 2) {
+    return (
+      <div className="grid h-full grid-cols-1 gap-3">
+        {images.map((image) => (
+          <ImageCard key={image.id} image={image} />
+        ))}
+      </div>
+    );
+  }
+
+  if (images.length === 3) {
+    return (
+      <div className="grid h-full grid-rows-[1.35fr_1fr] gap-3">
+        <ImageCard image={images[0]} />
+        <div className="grid min-h-0 grid-cols-2 gap-3">
+          {images.slice(1).map((image) => (
+            <ImageCard key={image.id} image={image} />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="print-sheet-shell mx-auto overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sheet">
+    <div className="grid h-full grid-cols-2 grid-rows-2 gap-3">
+      {images.map((image) => (
+        <ImageCard key={image.id} image={image} />
+      ))}
+    </div>
+  );
+}
+
+function ImageCard({ image }) {
+  return (
+    <div className="flex min-h-0 items-center justify-center overflow-hidden rounded-[8px] border border-[#d6d6d6] bg-white p-2.5">
+      <img src={image.url} alt={image.name} className="h-full w-full object-contain" />
+    </div>
+  );
+}
+
+const A4Preview = forwardRef(function A4Preview({ form, images }, ref) {
+  return (
+    <div className="print-sheet-shell mx-auto overflow-hidden rounded-[28px] border border-slate-300 bg-white shadow-sheet">
       <div
         ref={ref}
-        className="flex flex-col bg-white text-slate-900"
+        className="flex flex-col bg-white text-black"
         style={{ width: `${A4_WIDTH_PX}px`, height: `${A4_HEIGHT_PX}px` }}
       >
-        <div className="border-b border-slate-200 px-12 pb-6 pt-10">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-400">
-            Automotive Product Sheet
-          </p>
-          <h1 className="mt-4 break-words text-[34px] font-bold leading-tight text-ink">
-            {title || 'Enter Product Title'}
-          </h1>
+        <div className="px-8 pb-3 pt-5">
+          <div className="text-center">
+            <h1 className="text-[22px] font-semibold uppercase tracking-[0.14em] text-slate-900">
+              SALES RETURN RECORD
+            </h1>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <FieldBox label="Sales Return No." value={form.salesReturnNo} />
+            <FieldBox label="Date" value={form.date} />
+            <FieldBox label="Customer Name" value={form.customerName} />
+            <FieldBox label="Customer Phone Number" value={form.customerPhone} />
+          </div>
         </div>
 
-        <div className="flex-1 px-10 py-8">
-          {hasImages ? (
-            <div className={`grid h-full gap-5 ${gridCols} ${gridRows}`}>
-              {images.map((image) => (
-                <div
-                  key={image.id}
-                  className="flex min-h-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-4"
-                >
-                  <img
-                    src={image.url}
-                    alt={image.name}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState />
-          )}
+        <div className="flex-1 px-8 pb-3">
+          <div className="mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-600">
+            <span>Evidence Images</span>
+            <span>{`Images: ${images.length} / 4`}</span>
+          </div>
+
+          <div className="h-[736px]">
+            {images.length > 0 ? <ImageLayout images={images} /> : <EmptyState />}
+          </div>
         </div>
 
-        <div className="border-t border-slate-200 bg-slate-50/65 px-12 py-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-            Remarks
-          </p>
-          <div className="mt-3 min-h-[110px] whitespace-pre-wrap break-words text-[15px] leading-7 text-steel">
-            {remarks || 'Enter Remarks'}
+        <div className="px-8 pb-6 pt-1">
+          <div className="grid grid-cols-2 gap-2">
+            <FieldBox label="Return Amount" value={form.returnAmount} />
+            <FieldBox label="Postage" value={form.postage} />
           </div>
         </div>
       </div>

@@ -5,8 +5,8 @@
 :root {
   color: #0f172a;
   background:
-    radial-gradient(circle at top left, rgba(249, 115, 22, 0.08), transparent 20%),
-    linear-gradient(180deg, #f8fafc 0%, #eef4f8 100%);
+    radial-gradient(circle at top left, rgba(15, 23, 42, 0.05), transparent 20%),
+    linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -24,6 +24,10 @@ body {
   min-height: 100vh;
 }
 
+.print-hide {
+  display: block;
+}
+
 @page {
   size: A4 portrait;
   margin: 0;
@@ -31,9 +35,26 @@ body {
 
 @media print {
   body {
-    background: #ffffff;
+    margin: 0;
+    background: white;
   }
 
+  html,
+  body {
+    background: #ffffff;
+    width: 210mm;
+    height: 297mm;
+  }
+
+  #root {
+    min-height: auto;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-hide,
   .print-hidden {
     display: none !important;
   }
@@ -44,9 +65,37 @@ body {
     max-width: none !important;
   }
 
+  .print-preview-stage,
+  .print-preview-stage * {
+    visibility: visible;
+  }
+
+  .print-preview-stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .print-preview-wrap {
+    overflow: visible !important;
+    width: auto !important;
+  }
+
   .print-sheet-shell {
     box-shadow: none !important;
     margin: 0 auto !important;
     border: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  .print-sheet-shell img {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
   }
 }
