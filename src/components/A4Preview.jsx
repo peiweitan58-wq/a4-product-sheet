@@ -53,19 +53,16 @@ function ImageLayout({ images }) {
 
   if (images.length === 3) {
     return (
-      <div className="grid h-full grid-rows-[1.35fr_1fr] gap-3">
-        <ImageCard image={images[0]} />
-        <div className="grid min-h-0 grid-cols-2 gap-3">
-          {images.slice(1).map((image) => (
-            <ImageCard key={image.id} image={image} />
-          ))}
-        </div>
+      <div className="grid h-full grid-cols-3 gap-3">
+        {images.map((image) => (
+          <ImageCard key={image.id} image={image} />
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="grid h-full grid-cols-2 grid-rows-2 gap-3">
+    <div className="grid h-full grid-cols-4 gap-3">
       {images.map((image) => (
         <ImageCard key={image.id} image={image} />
       ))}
