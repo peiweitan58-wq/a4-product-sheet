@@ -43,7 +43,7 @@ function ImageLayout({ images }) {
 
   if (images.length === 2) {
     return (
-      <div className="grid h-full grid-cols-1 gap-3">
+      <div className="grid h-full grid-cols-2 gap-3">
         {images.map((image) => (
           <ImageCard key={image.id} image={image} />
         ))}

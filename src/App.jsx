@@ -12,6 +12,8 @@ import {
   sanitizeFileSegment,
 } from './utils';
 
+const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 function createImageItems(files, currentCount) {
   const slotsLeft = Math.max(MAX_IMAGES - currentCount, 0);
 
@@ -33,6 +35,7 @@ const initialForm = () => ({
 
 export default function App() {
   const previewRef = useRef(null);
+  const bottomFieldsRef = useRef(null);
   const imagesRef = useRef([]);
   const [form, setForm] = useState(initialForm);
   const [images, setImages] = useState([]);
@@ -49,23 +52,64 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const handlePaste = (event) => {
+      const clipboardItems = Array.from(event.clipboardData?.items || []);
+      const imageFiles = clipboardItems
+        .filter((item) => item.kind === 'file' && ACCEPTED_IMAGE_TYPES.includes(item.type))
+        .map((item) => item.getAsFile())
+        .filter(Boolean);
+
+      if (imageFiles.length === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      addFiles(imageFiles, 'paste');
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, []);
+
   const updateField = (field) => (event) => {
     setForm((current) => ({ ...current, [field]: event.target.value }));
   };
 
-  const addFiles = (files) => {
+  const addFiles = (files, source = 'drop') => {
     setImages((currentImages) => {
+      if (currentImages.length >= MAX_IMAGES) {
+        setWarning('Maximum 4 images reached.');
+        return currentImages;
+      }
+
       const acceptedCount = Math.max(MAX_IMAGES - currentImages.length, 0);
       const validFiles = files.slice(0, acceptedCount);
       const nextItems = createImageItems(validFiles, currentImages.length);
 
+      if (nextItems.length === 0) {
+        setWarning('Maximum 4 images reached.');
+        return currentImages;
+      }
+
+      const nextImages = [...currentImages, ...nextItems];
+
       if (files.length > acceptedCount) {
-        setWarning('Maximum 4 images only');
+        setWarning('Maximum 4 images reached.');
       } else {
         setWarning('');
       }
 
-      return [...currentImages, ...nextItems];
+      if (source === 'paste' && nextImages.length === MAX_IMAGES) {
+        window.setTimeout(() => {
+          bottomFieldsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          setWarning('All 4 images added.');
+        }, 120);
+      }
+
+      return nextImages;
     });
   };
 
@@ -155,8 +199,8 @@ export default function App() {
                 Create printable warehouse and ecommerce return records
               </h1>
               <p className="max-w-3xl text-sm leading-6 text-steel">
-                Fill in the return details, upload up to 4 evidence images, and export the
-                exact A4 preview to PDF or print.
+                Fill in the return details, then paste or drag up to 4 evidence images.
+                The exact A4 preview is used for both PDF and print.
               </p>
             </div>
 
@@ -219,7 +263,11 @@ export default function App() {
                     <p className="text-sm font-semibold text-steel">{`Images: ${images.length} / 4`}</p>
                   </div>
 
-                  <UploadZone onFilesAdded={addFiles} disabled={images.length >= MAX_IMAGES} />
+                  <UploadZone
+                    onFilesAdded={addFiles}
+                    disabled={images.length >= MAX_IMAGES}
+                    imageCount={images.length}
+                  />
 
                   {warning ? (
                     <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
@@ -247,7 +295,7 @@ export default function App() {
                                 onClick={() => removeImage(image.id)}
                                 className="shrink-0 rounded-full border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-700 transition hover:border-slate-500 hover:text-slate-900"
                               >
-                                Remove
+                                X Remove
                               </button>
                             </div>
                           </div>
@@ -258,7 +306,7 @@ export default function App() {
                 </div>
 
                 <div className="grid gap-3 md:grid-cols-2">
-                  <label className="block">
+                  <label ref={bottomFieldsRef} className="block">
                     <span className="mb-2 block text-sm font-semibold text-ink">
                       Return Amount
                     </span>
@@ -291,19 +339,10 @@ export default function App() {
                   </p>
                   <h2 className="mt-2 text-2xl font-semibold">Export and print</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-200">
-                    Buttons stay outside the A4 sheet, so they never appear in the PDF or
-                    printed document.
+                    Paste screenshots with Ctrl + V anywhere on the page, or drag them into
+                    the image area. Controls stay outside the A4 sheet.
                   </p>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => document.querySelector('input[type="file"]')?.click()}
-                  disabled={images.length >= MAX_IMAGES}
-                  className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Upload Images
-                </button>
 
                 <button
                   type="button"
@@ -335,11 +374,11 @@ export default function App() {
                 </p>
 
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
-                  <p className="font-semibold text-white">Image layout</p>
-                  <p className="mt-2">1 image: full width</p>
-                  <p>2 images: 2 rows</p>
-                  <p>3 images: 1 large + 2 column row</p>
-                  <p>4 images: 2x2 grid</p>
+                  <p className="font-semibold text-white">Paste workflow</p>
+                  <p className="mt-2">1. Fill the return details</p>
+                  <p>2. Copy screenshots from WhatsApp</p>
+                  <p>3. Press Ctrl + V up to 4 times</p>
+                  <p>4. Remove any image you do not need</p>
                 </div>
               </aside>
             </div>

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -6,14 +6,13 @@ function isValidFile(file) {
   return ACCEPTED_TYPES.includes(file.type);
 }
 
-export default function UploadZone({ onFilesAdded, disabled }) {
-  const inputRef = useRef(null);
+export default function UploadZone({ onFilesAdded, disabled, imageCount }) {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFiles = (fileList) => {
     const files = Array.from(fileList || []).filter(isValidFile);
     if (files.length > 0) {
-      onFilesAdded(files);
+      onFilesAdded(files, 'drop');
     }
   };
 
@@ -23,8 +22,7 @@ export default function UploadZone({ onFilesAdded, disabled }) {
         isDragging
           ? 'border-slate-700 bg-slate-100'
           : 'border-line bg-white hover:border-slate-400'
-      } ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
-      onClick={() => !disabled && inputRef.current?.click()}
+      } ${disabled ? 'opacity-70' : ''}`}
       onDragOver={(event) => {
         event.preventDefault();
         if (!disabled) {
@@ -35,43 +33,20 @@ export default function UploadZone({ onFilesAdded, disabled }) {
       onDrop={(event) => {
         event.preventDefault();
         setIsDragging(false);
-        if (!disabled) {
-          handleFiles(event.dataTransfer.files);
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(event) => {
-        if ((event.key === 'Enter' || event.key === ' ') && !disabled) {
-          event.preventDefault();
-          inputRef.current?.click();
-        }
+        handleFiles(event.dataTransfer.files);
       }}
     >
-      <input
-        ref={inputRef}
-        type="file"
-        accept=".jpg,.jpeg,.png,.webp"
-        className="hidden"
-        multiple
-        disabled={disabled}
-        onChange={(event) => {
-          handleFiles(event.target.files);
-          event.target.value = '';
-        }}
-      />
-
       <div className="flex flex-col items-center gap-3 text-center">
         <div className="rounded-full border border-slate-900 bg-slate-900 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white">
-          Upload Images
+          Paste Images (Ctrl + V)
         </div>
         <h2 className="text-lg font-semibold text-ink">
-          Upload document or photo evidence
+          Copy screenshots from WhatsApp and press Ctrl + V here.
         </h2>
         <p className="max-w-xl text-sm leading-6 text-steel">
-          Add JPG, PNG, or WEBP files. Up to 4 images are supported and the preview will
-          fit them into a single A4 portrait page.
+          You can also drag and drop PNG, JPG, JPEG, or WEBP images here.
         </p>
+        <p className="text-sm font-semibold text-slate-700">{`Images: ${imageCount} / 4`}</p>
       </div>
     </div>
   );
